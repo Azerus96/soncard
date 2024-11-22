@@ -10,7 +10,15 @@ class Deck:
         suits = ['♥', '♦', '♣', '♠']
         ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
         self.cards = [{'suit': suit, 'rank': rank} for suit in suits for rank in ranks]
+        self.used_cards = []
         random.shuffle(self.cards)
+    
+    def draw(self, count):
+        if len(self.cards) < count:
+            return []
+        drawn_cards = [self.cards.pop() for _ in range(count)]
+        self.used_cards.extend(drawn_cards)
+        return drawn_cards
 
 @app.route('/')
 def home():
@@ -48,8 +56,10 @@ def start_game():
 @app.route('/draw')
 def draw_cards():
     game_state = session['game_state']
-    if not game_state['initial_cards_placed'] or game_state['draw_count'] >= 4:
-        return jsonify({'cards': [], 'error': 'Cannot draw cards yet'})
+    if not game_state['initial_cards_placed']:
+        return jsonify({'cards': [], 'error': 'Сначала распределите начальные карты!'})
+    if game_state['draw_count'] >= 4:
+        return jsonify({'cards': [], 'error': 'Больше карт взять нельзя!'})
     
     deck = Deck()
     used_cards = game_state['used_cards']
