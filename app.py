@@ -40,7 +40,9 @@ def home():
 def start_game():
     deck = Deck()
     initial_cards = deck.cards[:5]
-    session['game_state'] = {
+    
+    # Создаем новое состояние игры
+    game_state = {
         'hand': initial_cards,
         'table': {
             'top': [''] * 3,
@@ -51,31 +53,56 @@ def start_game():
         'draw_count': 0,
         'initial_cards_placed': False
     }
+    
+    # Сохраняем состояние в сессии
+    session['game_state'] = game_state
     return jsonify({'cards': initial_cards})
 
 @app.route('/draw')
 def draw_cards():
-    game_state = session['game_state']
-    if not game_state['initial_cards_placed']:
+    game_state = session.get('game_state', {})
+    
+    # Проверяем условия для раздачи карт
+    if not game_state.get('initial_cards_placed'):
         return jsonify({'cards': [], 'error': 'Сначала распределите начальные карты!'})
-    if game_state['draw_count'] >= 4:
+    
+    if game_state.get('draw_count', 0) >= 4:
         return jsonify({'cards': [], 'error': 'Больше карт взять нельзя!'})
     
+    # Создаем новую колоду и удаляем использованные карты
     deck = Deck()
-    used_cards = game_state['used_cards']
-    available_cards = [card for card in deck.cards if f"{card['rank']}{card['suit']}" not in used_cards]
+    used_cards = game_state.get('used_cards', [])
+    available_cards = [card for card in deck.cards 
+                      if f"{card['rank']}{card['suit']}" not in used_cards]
     
+    # Берем следующие 3 карты
     next_cards = available_cards[:3]
+    
+    # Обновляем состояние игры
     game_state['hand'].extend(next_cards)
     game_state['used_cards'].extend([f"{card['rank']}{card['suit']}" for card in next_cards])
-    game_state['draw_count'] += 1
-    session['game_state'] = game_state
+    game_state['draw_count'] = game_state.get('draw_count', 0) + 1
     
+    # Сохраняем обновленное состояние
+    session['game_state'] = game_state
     return jsonify({'cards': next_cards})
 
 @app.route('/update_state', methods=['POST'])
 def update_state():
-    game_state = request.json
+    if not request.is_json:
+        return jsonify({'error': 'Content type must be application/json'}), 400
+    
+    game_state = request.get_json()
+    
+    # Проверяем структуру полученного состояния
+    if not isinstance(game_state, dict):
+        return jsonify({'error': 'Invalid game state format'}), 400
+    
+    required_keys = ['hand', 'table', 'used_cards', 'draw_count', 'initial_cards_placed']
+    if not all(key in game_state for key in required_keys):
+        return jsonify({'error': 'Missing required game state fields'}), 400
+    
+    # Сохраняем состояние в сессии
     session['game_state'] = game_state
     return jsonify({'status': 'success'})
 
