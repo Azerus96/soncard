@@ -1,0 +1,162 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Card Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .table {
+            display: grid;
+            grid-template-rows: auto auto auto;
+            gap: 10px;
+            margin: 20px;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            min-height: 100px;
+            border: 1px solid #ccc;
+        }
+        .card {
+            width: 70px;
+            height: 100px;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: move;
+        }
+        .card-slot {
+            width: 70px;
+            height: 100px;
+            border: 1px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="startGame()">Start</button>
+        <button onclick="drawCards()">OK</button>
+    </div>
+    
+    <div class="table">
+        <div class="row top" id="top-row"></div>
+        <div class="row middle" id="middle-row"></div>
+        <div class="row bottom" id="bottom-row"></div>
+    </div>
+
+    <div id="hand" style="display: flex; gap: 10px; margin: 20px;"></div>
+
+    <script>
+        let drawCount = 0;
+
+        function createCard(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.draggable = true;
+            cardElement.textContent = `${card.rank}${card.suit[0]}`;
+            
+            cardElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', e.target.textContent);
+            });
+            
+            return cardElement;
+        }
+
+        function createCardSlot() {
+            const slot = document.createElement('div');
+            slot.className = 'card-slot';
+            
+            slot.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            slot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const cardText = e.dataTransfer.getData('text/plain');
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.textContent = cardText;
+                if (slot.children.length === 0) {
+                    slot.appendChild(card);
+                }
+            });
+            
+            return slot;
+        }
+
+        function setupTable() {
+            const topRow = document.getElementById('top-row');
+            const middleRow = document.getElementById('middle-row');
+            const bottomRow = document.getElementById('bottom-row');
+
+            // Clear existing slots
+            topRow.innerHTML = '';
+            middleRow.innerHTML = '';
+            bottomRow.innerHTML = '';
+
+            // Create slots
+            for (let i = 0; i < 3; i++) topRow.appendChild(createCardSlot());
+            for (let i = 0; i < 5; i++) middleRow.appendChild(createCardSlot());
+            for (let i = 0; i < 5; i++) bottomRow.appendChild(createCardSlot());
+        }
+
+        async function startGame() {
+            drawCount = 0;
+            setupTable();
+            const response = await fetch('/start');
+            const data = await response.json();
+            
+            const hand = document.getElementById('hand');
+            hand.innerHTML = '';
+            data.cards.forEach(card => {
+                hand.appendChild(createCard(card));
+            });
+        }
+
+        async function drawCards() {
+            if (drawCount >= 4) return;
+            
+            const response = await fetch('/draw');
+            const data = await response.json();
+            
+            const hand = document.getElementById('hand');
+            data.cards.forEach(card => {
+                hand.appendChild(createCard(card));
+            });
+            
+            drawCount++;
+        }
+
+        // Setup touch events for mobile
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTable();
+            
+            let touchCard = null;
+            
+            document.addEventListener('touchstart', (e) => {
+                const card = e.target.closest('.card');
+                if (card) {
+                    touchCard = card;
+                }
+            }, false);
+
+            document.addEventListener('touchend', (e) => {
+                if (!touchCard) return;
+                
+                const touch = e.changedTouches[0];
+                const slot = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (slot && slot.className === 'card-slot' && slot.children.length === 0) {
+                    const newCard = touchCard.cloneNode(true);
+                    slot.appendChild(newCard);
+                    touchCard.remove();
+                }
+                
+                touchCard = null;
+            }, false);
+        });
+    </script>
+</body>
+</html>
