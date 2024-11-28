@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Training Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 150px;
+            box-sizing: border-box;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            background: #f0f0f0;
+            padding: 10px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .table {
+            display: grid;
+            grid-template-rows: auto auto auto;
+            gap: 20px;
+            margin: 20px auto;
+            width: 95%;
+            max-width: 1200px;
+            background-color: #1a472a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 2%;
+            min-height: 120px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255,255,255,0.1);
+            flex-wrap: nowrap;
+        }
+
+        .card {
+            width: calc(70px + 2vw);
+            height: calc(100px + 2vw);
+            min-width: 50px;
+            min-height: 70px;
+            border-radius: 8px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: calc(16px + 1vw);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            flex-shrink: 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .card[data-suit="♥"], .card[data-suit="♦"] {
+            color: #e44145;
+        }
+
+        .card[data-suit="♣"], .card[data-suit="♠"] {
+            color: #2d2d2d;
+        }
+
+        .card-slot {
+            width: calc(70px + 2vw);
+            height: calc(100px + 2vw);
+            min-width: 50px;
+            min-height: 70px;
+            border: 2px dashed rgba(255,255,255,0.3);
+            border-radius: 8px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px auto;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex-wrap: wrap;
+        }
+
+        .rank-selector {
+            display: flex;
+            gap: 10px;
+            margin-right: 20px;
+            flex-wrap: wrap;
+        }
+
+        .suit-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .selector-item {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .selector-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .selector-item.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .selector-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .combination-area {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px auto;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            min-height: 120px;
+            flex-wrap: wrap;
+        }
+
+        .combination-slot {
+            width: calc(70px + 1vw);
+            height: calc(100px + 1vw);
+            border: 2px dashed rgba(0,0,0,0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .combination-slot:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .combination-slot.active {
+            border-color: #4CAF50;
+            background-color: rgba(76,175,80,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .card-controls {
+                padding: 10px;
+            }
+
+            .selector-item {
+                padding: 6px 10px;
+                font-size: 14px;
+            }
+
+            .combination-slot {
+                width: calc(45px + 1vw);
+                height: calc(65px + 1vw);
+            }
+
+            .card {
+                width: calc(45px + 1vw);
+                height: calc(65px + 1vw);
+                font-size: calc(14px + 1vw);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <button onclick="window.location.href='/'">К игре</button>
+        <button onclick="resetTraining()">Сброс</button>
+    </div>
+
+    <div class="table">
+        <div class="row top" id="top-row"></div>
+        <div class="row middle" id="middle-row"></div>
+        <div class="row bottom" id="bottom-row"></div>
+    </div>
+
+    <div class="card-controls">
+        <div class="rank-selector">
+            <div class="selector-item" data-rank="A">A</div>
+            <div class="selector-item" data-rank="K">K</div>
+            <div class="selector-item" data-rank="Q">Q</div>
+            <div class="selector-item" data-rank="J">J</div>
+            <div class="selector-item" data-rank="10">10</div>
+            <div class="selector-item" data-rank="9">9</div>
+            <div class="selector-item" data-rank="8">8</div>
+            <div class="selector-item" data-rank="7">7</div>
+            <div class="selector-item" data-rank="6">6</div>
+            <div class="selector-item" data-rank="5">5</div>
+            <div class="selector-item" data-rank="4">4</div>
+            <div class="selector-item" data-rank="3">3</div>
+            <div class="selector-item" data-rank="2">2</div>
+        </div>
+        <div class="suit-selector">
+            <div class="selector-item" data-suit="♥">♥</div>
+            <div class="selector-item" data-suit="♦">♦</div>
+            <div class="selector-item" data-suit="♣">♣</div>
+            <div class="selector-item" data-suit="♠">♠</div>
+        </div>
+    </div>
+
+    <div class="combination-area">
+        <!-- 17 слотов будут добавлены через JavaScript -->
+    </div>
+
+    <script>
+        let activeSlot = null;
+        let selectedRank = null;
+        let selectedSuit = null;
+        let usedCards = new Set();
+
+        function setupTrainingArea() {
+            const combinationArea = document.querySelector('.combination-area');
+            combinationArea.innerHTML = '';
+            
+            // Создаем 17 слотов
+            for (let i = 0; i < 17; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'combination-slot';
+                
+                // Обработчик клика
+                slot.addEventListener('click', () => selectSlot(slot));
+                
+                // Обработчики для мобильных устройств
+                let touchStartY = 0;
+                slot.addEventListener('touchstart', (e) => {
+                    if (slot.children.length > 0) {
+                        touchStartY = e.touches[0].clientY;
+                    }
+                });
+
+                slot.addEventListener('touchmove', (e) => {
+                    if (slot.children.length > 0) {
+                        const touchY = e.touches[0].clientY;
+                        const card = slot.children[0];
+                        const deltaY = touchY - touchStartY;
+                        
+                        if (Math.abs(deltaY) > 50) {
+                            card.style.opacity = '0.5';
+                        }
+                    }
+                });
+
+                slot.addEventListener('touchend', (e) => {
+                    if (slot.children.length > 0) {
+                        const touchY = e.changedTouches[0].clientY;
+                        const deltaY = touchY - touchStartY;
+                        
+                        if (Math.abs(deltaY) > 50) {
+                            const card = slot.children[0];
+                            const cardData = {
+                                rank: card.dataset.rank,
+                                suit: card.dataset.suit
+                            };
+                            usedCards.delete(`${cardData.rank}${cardData.suit}`);
+                            slot.innerHTML = '';
+                        } else {
+                            const card = slot.children[0];
+                            card.style.opacity = '1';
+                        }
+                    }
+                });
+
+                combinationArea.appendChild(slot);
+            }
+
+            // Добавляем обработчики для селекторов
+            document.querySelectorAll('.selector-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    if (item.dataset.rank) {
+                        selectedRank = item.dataset.rank;
+                        updateSelection('rank');
+                    } else {
+                        selectedSuit = item.dataset.suit;
+                        updateSelection('suit');
+                    }
+                    tryCreateCard();
+                });
+            });
+
+            setupTable();
+        }
+
+        function selectSlot(slot) {
+            if (activeSlot) {
+                activeSlot.classList.remove('active');
+            }
+            activeSlot = slot;
+            slot.classList.add('active');
+            selectedRank = null;
+            selectedSuit = null;
+            updateSelection();
+        }
+
+        function updateSelection(type) {
+            const rankItems = document.querySelectorAll('.rank-selector .selector-item');
+            const suitItems = document.querySelectorAll('.suit-selector .selector-item');
+
+            if (type === 'rank' || !type) {
+                rankItems.forEach(item => {
+                    item.classList.toggle('selected', item.dataset.rank === selectedRank);
+                });
+            }
+            if (type === 'suit' || !type) {
+                suitItems.forEach(item => {
+                    item.classList.toggle('selected', item.dataset.suit === selectedSuit);
+                });
+            }
+
+            updateSelectors();
+        }
+
+        function updateSelectors() {
+            document.querySelectorAll('.selector-item').forEach(item => {
+                if (item.dataset.rank && selectedSuit) {
+                    item.classList.toggle('disabled', !isCardAvailable(item.dataset.rank, selectedSuit));
+                }
+                if (item.dataset.suit && selectedRank) {
+                    item.classList.toggle('disabled', !isCardAvailable(selectedRank, item.dataset.suit));
+                }
+            });
+        }
+
+        function isCardAvailable(rank, suit) {
+            const cardKey = `${rank}${suit}`;
+            return !usedCards.has(cardKey);
+        }
+
+        function createCard(cardData) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.rank = cardData.rank;
+            card.dataset.suit = cardData.suit;
+            card.textContent = `${cardData.rank}${cardData.suit}`;
+            return card;
+        }
+
+        function tryCreateCard() {
+            if (activeSlot && selectedRank && selectedSuit) {
+                if (!isCardAvailable(selectedRank, selectedSuit)) {
+                    alert('Эта карта уже использована!');
+                    return;
+                }
+
+                const card = createCard({rank: selectedRank, suit: selectedSuit});
+                
+                if (activeSlot.children.length > 0) {
+                    const oldCard = activeSlot.children[0];
+                    usedCards.delete(`${oldCard.dataset.rank}${oldCard.dataset.suit}`);
+                }
+                
+                activeSlot.innerHTML = '';
+                activeSlot.appendChild(card);
+                
+                usedCards.add(`${selectedRank}${selectedSuit}`);
+                
+                activeSlot.classList.remove('active');
+                activeSlot = null;
+                selectedRank = null;
+                selectedSuit = null;
+                updateSelection();
+            }
+        }
+
+        function resetTraining() {
+            usedCards.clear();
+            setupTrainingArea();
+            activeSlot = null;
+            selectedRank = null;
+            selectedSuit = null;
+            updateSelection();
+        }
+
+        function setupTable() {
+            const topRow = document.getElementById('top-row');
+            const middleRow = document.getElementById('middle-row');
+            const bottomRow = document.getElementById('bottom-row');
+
+            topRow.innerHTML = '';
+            middleRow.innerHTML = '';
+            bottomRow.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'card-slot';
+                topRow.appendChild(slot);
+            }
+            for (let i = 0; i < 5; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'card-slot';
+                middleRow.appendChild(slot);
+              }
+            for (let i = 0; i < 5; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'card-slot';
+                bottomRow.appendChild(slot);
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTrainingArea();
+        });
+    </script>
+</body>
+</html>
