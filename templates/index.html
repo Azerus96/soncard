@@ -188,7 +188,6 @@
         }
     </style>
 </head>
-
 <body>
     <button class="fullscreen-btn" onclick="toggleFullScreen()">
         <span class="material-icons">fullscreen</span>
@@ -197,8 +196,17 @@
     <div class="controls">
         <button onclick="startGame()">Начать</button>
         <button onclick="drawCards()">OK</button>
+        <button onclick="window.location.href='/training'">Тренировка</button>
     </div>
     
+    <!-- Поле ИИ -->
+    <div class="table">
+        <div class="row top" id="ai-top-row"></div>
+        <div class="row middle" id="ai-middle-row"></div>
+        <div class="row bottom" id="ai-bottom-row"></div>
+    </div>
+
+    <!-- Поле игрока -->
     <div class="table">
         <div class="row top" id="top-row"></div>
         <div class="row middle" id="middle-row"></div>
@@ -207,7 +215,7 @@
 
     <div id="hand"></div>
 
-    <script>
+<script>
         let gameState = {{ game_state|tojson|safe }};
         let isDragging = false;
 
@@ -257,7 +265,6 @@
         }
 
         function handleCardDrop(slot, card) {
-            // Сбрасываем все стили перед добавлением
             card.style = '';
             card.className = 'card';
 
@@ -269,7 +276,6 @@
             
             slot.appendChild(card);
             
-            // Убеждаемся, что карта видима
             requestAnimationFrame(() => {
                 card.style.display = 'flex';
                 card.style.visibility = 'visible';
@@ -313,6 +319,20 @@
         }
 
         function setupTable() {
+            // Инициализация поля ИИ
+            const aiTopRow = document.getElementById('ai-top-row');
+            const aiMiddleRow = document.getElementById('ai-middle-row');
+            const aiBottomRow = document.getElementById('ai-bottom-row');
+
+            aiTopRow.innerHTML = '';
+            aiMiddleRow.innerHTML = '';
+            aiBottomRow.innerHTML = '';
+
+            for (let i = 0; i < 3; i++) aiTopRow.appendChild(createCardSlot());
+            for (let i = 0; i < 5; i++) aiMiddleRow.appendChild(createCardSlot());
+            for (let i = 0; i < 5; i++) aiBottomRow.appendChild(createCardSlot());
+
+            // Инициализация поля игрока
             const topRow = document.getElementById('top-row');
             const middleRow = document.getElementById('middle-row');
             const bottomRow = document.getElementById('bottom-row');
@@ -437,11 +457,9 @@
                 const touch = e.touches[0];
                 const rect = card.getBoundingClientRect();
                 
-                // Вычисляем смещение относительно центра карты
                 initialX = touch.clientX - rect.left;
                 initialY = touch.clientY - rect.top;
                 
-                // Создаем копию карты для перетаскивания
                 const clone = card.cloneNode(true);
                 clone.style.position = 'fixed';
                 clone.style.zIndex = '1000';
@@ -464,11 +482,9 @@
                 e.preventDefault();
                 const touch = e.touches[0];
                 
-                // Перемещаем клон карты
                 touchCard.clone.style.left = `${touch.clientX - initialX}px`;
                 touchCard.clone.style.top = `${touch.clientY - initialY}px`;
                 
-                // Подсветка слота под картой
                 const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
                 const slot = elementBelow?.closest('.card-slot');
                 
@@ -488,13 +504,11 @@
                 const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
                 const slot = dropTarget?.closest('.card-slot');
                 
-                // Удаляем клон
                 if (touchCard.clone) {
                     touchCard.clone.remove();
                     touchCard.clone = null;
                 }
                 
-                // Восстанавливаем оригинальную карту
                 touchCard.style.opacity = '1';
                 
                 document.querySelectorAll('.card-slot').forEach(s => {
@@ -504,7 +518,6 @@
                 if (slot) {
                     handleCardDrop(slot, touchCard);
                 } else {
-                    // Возвращаем карту в руку, если не попали в слот
                     const hand = document.getElementById('hand');
                     hand.appendChild(touchCard);
                 }
@@ -513,7 +526,6 @@
                 updateGameState();
             }, { passive: false });
 
-            // Предотвращаем скролл при перетаскивании
             document.addEventListener('touchmove', (e) => {
                 if (touchCard) {
                     e.preventDefault();
