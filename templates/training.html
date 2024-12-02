@@ -96,26 +96,21 @@
             -webkit-user-select: none;
         }
 
-        .card[data-suit="♥"], .card[data-suit="♦"] {
-            color: #e44145;
-        }
-
-        .card[data-suit="♣"], .card[data-suit="♠"] {
-            color: #2d2d2d;
-        }
-
-        .card-slot {
-            width: calc(70px + 2vw);
-            height: calc(100px + 2vw);
-            min-width: 50px;
-            min-height: 70px;
-            border: 2px dashed rgba(255,255,255,0.3);
-            border-radius: 8px;
-            flex-shrink: 0;
+        .card-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.1));
             transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        }
+
+        .card:hover .card-svg {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            transform: translateY(-2px);
+        }
+
+        .card:active .card-svg {
+            transform: translateY(1px);
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
         }
 
         .card-controls {
@@ -199,25 +194,61 @@
             background-color: rgba(76,175,80,0.1);
         }
 
+        /* Общие стили для мобильных устройств */
         @media (max-width: 768px) {
-            .card-controls {
+            body {
                 padding: 10px;
+                padding-bottom: 120px;
+            }
+
+            .table {
+                width: 98%;
+                padding: 10px;
+                gap: 10px;
+                margin: 10px auto;
+            }
+
+            .row {
+                gap: 1.5%;
+                min-height: 80px;
+            }
+
+            .card, .card-slot {
+                width: calc(45px + 2vw);
+                height: calc(65px + 2vw);
+                font-size: calc(14px + 1vw);
+            }
+
+            .card-controls {
+                padding: 8px;
+                gap: 5px;
+                flex-direction: column;
+            }
+
+            .rank-selector {
+                gap: 5px;
+                margin-right: 0;
+                justify-content: center;
+            }
+
+            .suit-selector {
+                gap: 8px;
             }
 
             .selector-item {
-                padding: 6px 10px;
+                padding: 6px 8px;
                 font-size: 14px;
+            }
+
+            .combination-area {
+                padding: 8px;
+                gap: 5px;
+                min-height: 80px;
             }
 
             .combination-slot {
                 width: calc(45px + 1vw);
                 height: calc(65px + 1vw);
-            }
-
-            .card {
-                width: calc(45px + 1vw);
-                height: calc(65px + 1vw);
-                font-size: calc(14px + 1vw);
             }
         }
     </style>
@@ -251,10 +282,10 @@
             <div class="selector-item" data-rank="2">2</div>
         </div>
         <div class="suit-selector">
-            <div class="selector-item" data-suit="♥">♥</div>
-            <div class="selector-item" data-suit="♦">♦</div>
-            <div class="selector-item" data-suit="♣">♣</div>
-            <div class="selector-item" data-suit="♠">♠</div>
+            <div class="selector-item" data-suit="">♥</div>
+            <div class="selector-item" data-suit="">♦</div>
+            <div class="selector-item" data-suit="">♣</div>
+            <div class="selector-item" data-suit="">♠</div>
         </div>
     </div>
 
@@ -267,6 +298,58 @@
         let selectedRank = null;
         let selectedSuit = null;
         let usedCards = new Set();
+
+        const cardDesigns = {
+            // Базовый шаблон SVG карты
+            template: (rank, suit, color) => `
+                <svg viewBox="0 0 100 140" class="card-svg">
+                    <defs>
+                        <linearGradient id="card-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ffffff"/>
+                            <stop offset="100%" style="stop-color:#f0f0f0"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="100" height="140" rx="10" fill="url(#card-gradient)" 
+                          stroke="#ddd" stroke-width="2"/>
+                    <g class="card-content" transform="translate(50, 70)">
+                        <!-- Ранг -->
+                        <text x="0" y="0" text-anchor="middle" font-size="30" 
+                              font-weight="bold" fill="${color}">
+                            ${rank}
+                        </text>
+                        <!-- Масть -->
+                        <text x="0" y="25" text-anchor="middle" font-size="30" 
+                              fill="${color}">
+                            ${suit}
+                        </text>
+                    </g>
+                </svg>
+            `
+        };
+
+        function createCard(cardData) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.rank = cardData.rank;
+            card.dataset.suit = cardData.suit;
+
+            const color = (cardData.suit === '♥' || cardData.suit === '♦') ? '#e44145' : '#2d2d2d';
+            const svg = cardDesigns.template(cardData.rank, cardData.suit, color);
+            
+            card.innerHTML = svg;
+
+            // Добавляем анимацию появления
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            
+            requestAnimationFrame(() => {
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+            });
+
+            return card;
+        }
 
         function setupTrainingArea() {
             const combinationArea = document.querySelector('.combination-area');
@@ -385,15 +468,6 @@
             return !usedCards.has(cardKey);
         }
 
-        function createCard(cardData) {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.dataset.rank = cardData.rank;
-            card.dataset.suit = cardData.suit;
-            card.textContent = `${cardData.rank}${cardData.suit}`;
-            return card;
-        }
-
         function tryCreateCard() {
             if (activeSlot && selectedRank && selectedSuit) {
                 if (!isCardAvailable(selectedRank, selectedSuit)) {
@@ -406,11 +480,13 @@
                 if (activeSlot.children.length > 0) {
                     const oldCard = activeSlot.children[0];
                     usedCards.delete(`${oldCard.dataset.rank}${oldCard.dataset.suit}`);
+                    // Анимация удаления старой карты
+                    oldCard.style.opacity = '0';
+                    oldCard.style.transform = 'scale(0.9)';
+                    setTimeout(() => oldCard.remove(), 300);
                 }
                 
-                activeSlot.innerHTML = '';
                 activeSlot.appendChild(card);
-                
                 usedCards.add(`${selectedRank}${selectedSuit}`);
                 
                 activeSlot.classList.remove('active');
@@ -419,15 +495,6 @@
                 selectedSuit = null;
                 updateSelection();
             }
-        }
-
-        function resetTraining() {
-            usedCards.clear();
-            setupTrainingArea();
-            activeSlot = null;
-            selectedRank = null;
-            selectedSuit = null;
-            updateSelection();
         }
 
         function setupTable() {
@@ -454,6 +521,15 @@
                 slot.className = 'card-slot';
                 bottomRow.appendChild(slot);
             }
+        }
+
+        function resetTraining() {
+            usedCards.clear();
+            setupTrainingArea();
+            activeSlot = null;
+            selectedRank = null;
+            selectedSuit = null;
+            updateSelection();
         }
 
         // Инициализация при загрузке страницы
