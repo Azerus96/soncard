@@ -231,7 +231,7 @@
                 font-size: calc(14px + 1vw);
             }
 
-        .card-controls {
+            .card-controls {
                 padding: 8px;
                 gap: 5px;
                 flex-direction: column;
@@ -440,6 +440,7 @@
             }
 
             updateSelectors();
+
         }
 
 
@@ -453,7 +454,7 @@
                 if (item.dataset.suit && selectedRank) {
                     suitItems.forEach(suitItem => suitItem.classList.remove('selected'));
                     item.classList.add('selected');
-                    selectedSuit = item.dataset.suit;
+                    // selectedSuit = item.dataset.suit; // Убрали эту строку
                 }
             });
         }
