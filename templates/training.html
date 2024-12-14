@@ -413,13 +413,19 @@
         }
 
         function selectSlot(slot) {
-            if (activeSlot) {
+            if (selectedRank && selectedSuit) {
+                if (activeSlot) {
+                    activeSlot.classList.remove('active');
+                }
+                activeSlot = slot;
+                tryCreateCard();
+                return;
+            }
+if (activeSlot) {
                 activeSlot.classList.remove('active');
             }
             activeSlot = slot;
             slot.classList.add('active');
-            selectedRank = null;
-            selectedSuit = null;
             updateSelection();
         }
 
@@ -440,7 +446,6 @@
             }
 
             updateSelectors();
-
         }
 
 
@@ -454,7 +459,6 @@
                 if (item.dataset.suit && selectedRank) {
                     suitItems.forEach(suitItem => suitItem.classList.remove('selected'));
                     item.classList.add('selected');
-                    // selectedSuit = item.dataset.suit; // Убрали эту строку
                 }
             });
         }
@@ -465,23 +469,25 @@
         }
 
         function tryCreateCard() {
-            if (activeSlot && selectedRank && selectedSuit) {
-                if (!isCardAvailable(selectedRank, selectedSuit)) {
-                    alert('Эта карта уже использована!');
-                    return;
+            if (selectedRank && selectedSuit) {
+                if (activeSlot) {
+                    if (!isCardAvailable(selectedRank, selectedSuit)) {
+                        alert('Эта карта уже использована!');
+                        return;
+                    }
+
+                    const card = createCard({rank: selectedRank, suit: selectedSuit});
+
+                    activeSlot.innerHTML = '';
+                    activeSlot.appendChild(card);
+                    usedCards.add(`${selectedRank}${selectedSuit}`);
+
+                    activeSlot.classList.remove('active');
+                    activeSlot = null;
+                    selectedRank = null;
+                    selectedSuit = null;
+                    updateSelection();
                 }
-
-                const card = createCard({rank: selectedRank, suit: selectedSuit});
-
-                activeSlot.innerHTML = '';
-                activeSlot.appendChild(card);
-                usedCards.add(`${selectedRank}${selectedSuit}`);
-
-                activeSlot.classList.remove('active');
-                activeSlot = null;
-                selectedRank = null;
-                selectedSuit = null;
-                updateSelection();
             }
         }
 
@@ -527,3 +533,4 @@
     </script>
 </body>
 </html>
+        
