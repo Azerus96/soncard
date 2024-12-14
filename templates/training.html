@@ -421,44 +421,36 @@
                 tryCreateCard();
                 return;
             }
-if (activeSlot) {
+
+            if (activeSlot) {
                 activeSlot.classList.remove('active');
             }
             activeSlot = slot;
-            slot.classList.add('active');
+            slot.classList
+
+        .add('active');
             updateSelection();
         }
-
 
         function updateSelection(type) {
             const rankItems = document.querySelectorAll('.rank-selector .selector-item');
             const suitItems = document.querySelectorAll('.suit-selector .selector-item');
 
-            if (type === 'rank' || !type) {
-                rankItems.forEach(item => {
-                    item.classList.toggle('selected', item.dataset.rank === selectedRank);
-                });
-            }
-            if (type === 'suit' || !type) {
-                suitItems.forEach(item => {
-                    item.classList.toggle('selected', item.dataset.suit === selectedSuit);
-                });
-            }
+            rankItems.forEach(item => {
+                item.classList.toggle('selected', item.dataset.rank === selectedRank);
+            });
+
+            suitItems.forEach(item => {
+                item.classList.toggle('selected', item.dataset.suit === selectedSuit);
+            });
 
             updateSelectors();
         }
 
-
         function updateSelectors() {
-            const suitItems = document.querySelectorAll('.suit-selector .selector-item');
-
             document.querySelectorAll('.selector-item').forEach(item => {
                 if (item.dataset.rank && selectedSuit) {
                     item.classList.toggle('disabled', !isCardAvailable(item.dataset.rank, selectedSuit));
-                }
-                if (item.dataset.suit && selectedRank) {
-                    suitItems.forEach(suitItem => suitItem.classList.remove('selected'));
-                    item.classList.add('selected');
                 }
             });
         }
@@ -490,7 +482,6 @@ if (activeSlot) {
                 }
             }
         }
-
 
         function setupTable() {
             const topRow = document.getElementById('top-row');
@@ -533,4 +524,3 @@ if (activeSlot) {
     </script>
 </body>
 </html>
-        
